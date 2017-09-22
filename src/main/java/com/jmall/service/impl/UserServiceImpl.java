@@ -85,7 +85,7 @@ public class UserServiceImpl implements IUserService {
         return ServerResponse.createBySuccessMessage("validate successfully");
     }
 
-    public ServerResponse<String> selectQuestion(String username) {
+    public ServerResponse selectQuestion(String username) {
         ServerResponse validationResponse = this.checkValid(username, Const.USERNAME);
         if (validationResponse.isSuccess()) {
             return ServerResponse.createByErrorMessage("No such Username");
@@ -154,6 +154,39 @@ public class UserServiceImpl implements IUserService {
 
         return ServerResponse.createByErrorMessage("fail to update password");
 
+    }
+
+    public ServerResponse<User> updateUserInformation(User user) {
+        // username cannot be updated
+
+        // validate email
+        int resultCount = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+        if (resultCount > 0) {
+            return ServerResponse.createByErrorMessage("email exists, please use another email");
+        }
+
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setEmail(user.getEmail());
+        updateUser.setPhone(user.getPhone());
+        updateUser.setQuestion(user.getQuestion());
+        updateUser.setAnswer(user.getAnswer());
+
+        int updateCount = userMapper.updateByPrimaryKeySelective(updateUser);
+        if (updateCount > 0) {
+            return ServerResponse.createBySuccess("update user info successfully", updateUser);
+        }
+
+        return ServerResponse.createByErrorMessage("fail to update user information");
+    }
+
+    public ServerResponse<User> getUserInformation(Integer userId) {
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (user == null) {
+            return ServerResponse.createByErrorMessage("cannot find current user");
+        }
+        user.setPassword(StringUtils.EMPTY);
+        return ServerResponse.createBySuccess(user);
     }
 
 
