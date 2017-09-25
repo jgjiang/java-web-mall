@@ -6,7 +6,6 @@ import com.jmall.common.ServerResponse;
 import com.jmall.pojo.User;
 import com.jmall.service.ICategoryService;
 import com.jmall.service.IUserService;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,7 +43,6 @@ public class CategoryManageController {
         }
     }
 
-
     @RequestMapping("set_category_name.do")
     @ResponseBody
     public ServerResponse setCategoryName(HttpSession session, Integer categoryId, String categoryName) {
@@ -61,4 +59,49 @@ public class CategoryManageController {
             return ServerResponse.createByErrorMessage("no permission to add category");
         }
     }
+
+    @RequestMapping("get_category.do")
+    @ResponseBody
+    public ServerResponse getChildrenParallelCategory(HttpSession session, @RequestParam(value = "categoryId", defaultValue = "0") Integer categoryId) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"user does not login, please login first");
+        }
+
+        ServerResponse response = iUserService.checkAdminRole(user);
+        if (response.isSuccess()) {
+            // query children nodes, no recursive process, keep it parallel
+            return iCategoryService.getChildrenParallelCategory(categoryId);
+
+        }else {
+            return ServerResponse.createByErrorMessage("no permission to add category");
+        }
+
+    }
+
+
+    @RequestMapping("get_deep_category.do")
+    @ResponseBody
+    public ServerResponse getCategoryAndChildrenCategory(HttpSession session, @RequestParam(value = "categoryId", defaultValue = "0") Integer categoryId) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),"user does not login, please login first");
+        }
+
+        ServerResponse response = iUserService.checkAdminRole(user);
+        if (response.isSuccess()) {
+            // 查询当前节点的ID和递归子节点的ID
+            return iCategoryService.getChildrenParallelCategory(categoryId);
+
+        }else {
+            return ServerResponse.createByErrorMessage("no permission to add category");
+        }
+
+    }
+
+
+
+
+
+
 }
